@@ -1,5 +1,5 @@
 import streamlit as st
-from chat import generate_reply as get_response
+from qa import get_response
 
 st.title("ChatMed")
 
