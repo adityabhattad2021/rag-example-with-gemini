@@ -1,26 +1,32 @@
-import streamlit as st
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import find_dotenv, load_dotenv
+from pydantic import BaseModel
 from qa import get_response
 
-st.title("ChatMed")
+load_dotenv(find_dotenv())
 
-if "messages" not in st.session_state:
-  st.session_state.messages = []
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# For displaying message from history on rerun
-for message in st.session_state.messages:
-  with st.chat_message(message['role']):
-    st.markdown(message['content'])
+class GenerateRequest(BaseModel):
+    query: str
 
+@app.get('/')
+def test_query():
+  return {"message":"hello from query service."}
 
-if prompt := st.chat_input("Message..."):
-  with st.chat_message("user"):
-    st.markdown(prompt)
+@app.post('/get-ai-response')
+def query(req_body:GenerateRequest):
+    response = get_response(query=req_body.query)
+    return {"ai_response":response}
 
-  st.session_state.messages.append({"role": "user", "content": prompt})
-
-  response = get_response(prompt)
-
-  with st.chat_message("assistant"):
-    st.markdown(response)
-
-  st.session_state.messages.append({"role": "assistant", "content": response})
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -7,6 +7,9 @@ from util import get_absolute_path
 from dotenv import load_dotenv
 import google.generativeai as genai
 import os
+from langchain.globals import set_debug
+
+set_debug(True)
 
 load_dotenv()
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
@@ -45,8 +48,8 @@ def retrival_qa_chain():
    qa_chain = RetrievalQA.from_chain_type(
       llm=llm,
       chain_type='stuff',
-      retriever=db.as_retriever(search_kwargs={'k':2}),
-      return_source_documents=False,
+      retriever=db.as_retriever(search_kwargs={'k':5}),
+      return_source_documents=True,
       chain_type_kwargs={'prompt':prompt}
    )
    return qa_chain
@@ -56,10 +59,4 @@ def retrival_qa_chain():
 def get_response(query):
    bot = retrival_qa_chain()
    response = bot.invoke(query)
-   print(response)
    return response["result"]
-
-
-
-if __name__=='__main__':
-   get_response("I have stomach ache, what should be done?")
